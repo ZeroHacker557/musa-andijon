@@ -1,0 +1,11 @@
+# Vercel faqat saytni oladi: mini app, admin panel va api/ funksiyalari.
+#
+# bot/ — Telegram bot doimiy ishlaydigan dastur (start_polling), Vercel
+# funksiyasi emas; u alohida serverda (Railway) ishlaydi. Shu papka
+# ko'rinsa, Vercel uni Python «service» deb taklif qiladi.
+bot/
+
+# Faqat lokal skriptlar va dizayn namunalari uchun
+design-namunalar/
+catalog-export.json
+.claude/
