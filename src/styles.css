@@ -6066,7 +6066,9 @@ a { color: inherit; text-decoration: none; }
   .atlas-hero { padding-left: 2.5rem; padding-right: 2.5rem; }
 }
 .atlas-hero__bar { display: flex; align-items: center; gap: 0.5rem; }
-.tg-fullscreen .atlas-hero__bar { margin-top: var(--tg-controls, 0px); }
+/* To'liq ekranda qo'shimcha chekinish YO'Q: --safe-top Telegram tugmalari
+   qatorini allaqachon o'z ichiga oladi (applySafeArea). Ilgari bu yerda
+   yana --tg-controls qo'shilib, tepada ortiqcha bo'sh joy qolardi. */
 
 .atlas-addr {
   display: flex;
