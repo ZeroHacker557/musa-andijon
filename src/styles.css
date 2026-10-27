@@ -6182,7 +6182,7 @@ a { color: inherit; text-decoration: none; }
 /* ====== «Story» doirachalari ====== */
 .atlas-stories {
   display: flex;
-  gap: 0.9rem;
+  gap: 0.3rem;
   overflow-x: auto;
   padding: 0.35rem 1rem 0.4rem;
 }
@@ -6191,7 +6191,7 @@ a { color: inherit; text-decoration: none; }
 }
 .atlas-story {
   display: flex;
-  width: 74px;
+  width: 86px;
   flex-shrink: 0;
   flex-direction: column;
   align-items: center;
@@ -6240,11 +6240,14 @@ a { color: inherit; text-decoration: none; }
   overflow: hidden;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
-  font-size: 0.66rem;
+  font-size: 0.65rem;
   font-weight: 700;
   line-height: 1.2;
   letter-spacing: -0.01em;
   text-align: center;
+  /* Bitta uzun so'z sig'masa — bo'g'in bilan ko'chiriladi (lang — HomePage) */
+  hyphens: auto;
+  -webkit-hyphens: auto;
   color: var(--ink-2);
 }
 
@@ -6497,10 +6500,12 @@ svg.lucide { stroke-width: 1.9; }
 }
 
 /* ====== Profil ====== */
-.profile-cap { flex-direction: column; align-items: stretch; padding-bottom: 3.6rem; }
+/* nowrap — umumiy .page-head qoidasidagi wrap ustun ichida kenglikni cheklamay
+   qo'yardi: uzun ism qatorni ekrandan chiqarib yuborardi (… ham chiqmasdi) */
+.profile-cap { flex-direction: column; flex-wrap: nowrap; align-items: stretch; padding-bottom: 3.6rem; }
 .profile-cap__row { display: flex; align-items: center; min-height: 42px; }
 .profile-cap__row .page-title { font-size: 1.55rem; }
-.profile-cap__me { display: flex; align-items: center; gap: 0.9rem; margin-top: 1.1rem; text-align: left; }
+.profile-cap__me { display: flex; min-width: 0; max-width: 100%; align-items: center; gap: 0.9rem; margin-top: 1.1rem; text-align: left; }
 .profile-cap__avatar {
   display: grid;
   width: 64px;
@@ -6529,6 +6534,7 @@ svg.lucide { stroke-width: 1.9; }
   font-weight: 800;
 }
 .tg-fullscreen .profile-cap__row { display: none; }
+.tg-fullscreen .profile-cap { padding-bottom: 3.6rem; }
 
 .profile-stats {
   position: relative;

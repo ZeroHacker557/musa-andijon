@@ -179,7 +179,7 @@ export function HomePage({
                     <span className="atlas-story__tag">{lang === 'ru' ? 'Акция' : 'Aksiya'}</span>
                   )}
                 </span>
-                <span className="atlas-story__label">{story.label}</span>
+                <span className="atlas-story__label" lang={lang}>{story.label}</span>
               </button>
             )
           })}
