@@ -23,7 +23,7 @@ faqat tashqi xizmatlarda (Vercel, BotFather, Firebase Console) qilinadi.
 | **Bot tokeni** | `bot/.env` (git'ga tushmaydi) | ✅ yozildi |
 | **Bot tokeni** | Vercel env `BOT_TOKEN` | ❌ **siz qo'shasiz** |
 | Firebase service account JSON | Vercel env `FIREBASE_SERVICE_ACCOUNT` | ❌ **siz qo'shasiz** |
-| BotFather `/setdomain` → `musa-delivery.vercel.app` | Telegram | ❌ **siz qilasiz** |
+| BotFather `/setdomain` → `musa-andijon-v3ug.vercel.app` | Telegram | ❌ **siz qilasiz** |
 | Firestore Rules (4-bo'lim) | Firebase Console | ❌ **siz qilasiz** |
 | Firebase web config | `src/config/firebase.ts` (`musa-onlineshop`) | ✅ yozildi |
 | Service account fayli va bucket | `bot/config.py`, loyiha ildizida JSON | ✅ yozildi |
@@ -181,7 +181,7 @@ Keyin sinxron o'zi ishlaydi: Vercel cron kuniga bir marta, bot har
 Tekshirish (deploy'dan keyin):
 
 ```bash
-curl -s -H "x-cron-secret: <CRON_SECRET>" https://musa-delivery.vercel.app/api/linko-cron
+curl -s -H "x-cron-secret: <CRON_SECRET>" https://musa-andijon-v3ug.vercel.app/api/linko-cron
 ```
 
 ---

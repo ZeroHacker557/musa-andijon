@@ -1,8 +1,8 @@
 # ═══════════════════════════════════════════════════════════
 # MUSA Andijon — bot sozlamalari
 #
-# Bot @musa_andijon_bot, Firebase loyihasi `musa-andijon`.
-# ⚠️ Qolgani: MINI_APP_URL — Andijon uchun Vercel domeni (TODO(ANDIJON)).
+# Bot @musa_andijon_bot, Firebase loyihasi `musa-andijon`,
+# sayt (mini app va admin panel) — musa-andijon-v3ug.vercel.app.
 #
 # Frontend tomonidagi mos fayllar:
 #   src/config/brand.ts     — bot username, aloqa ma'lumotlari
@@ -45,7 +45,7 @@ CRON_SECRET  = os.environ.get("CRON_SECRET", "")
 BOT_USERNAME = "musa_andijon_bot"
 ADMIN_IDS    = {7203124812}   # Egalar — panel orqali o'chirib bo'lmaydi.
 # BotFather /setdomain da ham aynan shu domen ko'rsatilgan bo'lishi kerak.
-MINI_APP_URL = "https://musa-delivery.vercel.app"   # TODO(ANDIJON): Andijon Vercel domeni
+MINI_APP_URL = "https://musa-andijon-v3ug.vercel.app"
 # Admin panel — o'sha domendagi alohida sahifa. Bot uni faqat
 # adminlarga ko'rsatadi va u Telegram oynasida to'liq ekranda ochiladi.
 ADMIN_PANEL_URL = f"{MINI_APP_URL}/admin.html"

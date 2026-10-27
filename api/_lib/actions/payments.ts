@@ -129,7 +129,7 @@ export function siteUrl(): string {
   } catch {
     // pastdagi zaxira
   }
-  return 'https://musa-delivery.vercel.app'
+  return 'https://musa-andijon-v3ug.vercel.app'
 }
 
 /** To'lovdan keyin mijoz qaytadigan sahifa (api/payment.ts GET). */
