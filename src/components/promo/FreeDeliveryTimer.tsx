@@ -1,16 +1,30 @@
-import { Clock } from 'lucide-react'
-import { ArrowIcon, SnowIcon, TruckIcon } from '../icons/AtlasIcons'
+import { ArrowIcon, TruckIcon } from '../icons/AtlasIcons'
 import { useI18n } from '../../i18n'
 import { usePresence } from '../../hooks/use-presence'
 import { formatCountdown, useDeliveryTimer } from '../../hooks/use-delivery-timer'
 import { hapticSelection } from '../../utils/telegram'
 
-/** 3 daqiqadan kam qolsa — shoshiltiruvchi rang. */
+/** 3 daqiqadan kam qolsa — shoshiltiruvchi (qizil) rang. */
 const URGENT_MS = 3 * 60_000
 
 /**
- * «Yetkazib berish BEPUL» — taymer boshlangan zahoti chiqadigan oyna:
- * aylana sanoq, yo'l bo'ylab yuradigan mashina va «Xaridni boshlash».
+ * Sanoq raqamli kataklarda: «19 : 56». Har katak alohida — raqam
+ * almashganda faqat o'sha katak yangilanadi (key), qolganlari joyida.
+ */
+function Tiles({ ms, size = 'lg' }: { ms: number; size?: 'lg' | 'sm' }) {
+  const [mm, ss] = formatCountdown(ms).split(':')
+  return (
+    <span className={'fdc-tiles fdc-tiles--' + size} aria-hidden="true">
+      {[...mm].map((d, i) => <b key={`m${i}${d}`}>{d}</b>)}
+      <i>:</i>
+      {[...ss].map((d, i) => <b key={`s${i}${d}`}>{d}</b>)}
+    </span>
+  )
+}
+
+/**
+ * «Yetkazib berish BEPUL» — taymer boshlanganda ekran o'rtasiga tushadigan
+ * kupon chiptasi: tepada sariq qism, yirtiladigan chiziq, pastda sanoq.
  */
 export function FreeDeliverySheet({ open, hasCart, onShop, onClose }: {
   open: boolean
@@ -25,63 +39,38 @@ export function FreeDeliverySheet({ open, hasCart, onShop, onClose }: {
   if (!mounted) return null
 
   const minutes = Math.round(timer.totalMs / 60_000)
-  const R = 52
-  const C = 2 * Math.PI * R
+  const urgent = timer.remainingMs < URGENT_MS
 
   return (
-    <div className={'fdt-overlay ' + (leaving ? 'leaving' : '')} onClick={onClose}>
+    <div className={'fdc-overlay' + (leaving ? ' leaving' : '')} onClick={onClose}>
       <div
-        className={'fdt-sheet ' + (leaving ? 'leaving' : '')}
+        className={'fdc-ticket' + (urgent ? ' is-urgent' : '') + (leaving ? ' leaving' : '')}
         role="dialog"
         aria-modal="true"
         aria-label={`${t('timer.title')} ${t('timer.free')}`}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="fdt-hero">
-          <span className="fdt-grip" />
-          {/* Ixcham: chapda sarlavha, o'ngda sanoq — oyna ekranning yarmicha */}
-          <div className="fdt-hero__row">
-            <div className="fdt-hero__text">
-              <span className="fdt-badge">{t('timer.badge')}</span>
-              <h2 className="fdt-title">
-                {t('timer.title')}
-                <span className="fdt-title__free">{t('timer.free')}</span>
-              </h2>
-            </div>
-
-            <div className="fdt-ring" role="timer" aria-live="off">
-              <svg viewBox="0 0 120 120" aria-hidden="true">
-                <circle className="fdt-ring__track" cx="60" cy="60" r={R} />
-                <circle
-                  className="fdt-ring__value"
-                  cx="60"
-                  cy="60"
-                  r={R}
-                  strokeDasharray={C}
-                  strokeDashoffset={C * (1 - timer.progress)}
-                />
-              </svg>
-              <span className="fdt-ring__center">
-                <b>{formatCountdown(timer.remainingMs)}</b>
-                <small>{t('timer.left')}</small>
-              </span>
-            </div>
-          </div>
-
-          {/* Yo'l va mashina */}
-          <div className="fdt-road" aria-hidden="true">
-            <span className="fdt-road__truck"><TruckIcon size={22} strokeWidth={2.2} /></span>
-          </div>
+        <div className="fdc-ticket__top">
+          <span className="fdc-badge">{t('timer.badge')}</span>
+          <h2 className="fdc-title">
+            <small>{t('timer.title')}</small>
+            <b>{t('timer.free')}</b>
+          </h2>
+          <span className="fdc-ticket__truck" aria-hidden="true"><TruckIcon size={44} strokeWidth={1.8} /></span>
         </div>
 
-        <div className="fdt-body">
-          <p className="fdt-subtitle">{t('timer.subtitle', { minutes })}</p>
-          <div className="fdt-perks">
-            <span><TruckIcon size={15} /> {t('timer.perkFree')}</span>
-            <span><SnowIcon size={15} /> {t('timer.perkCold')}</span>
+        {/* Yirtiladigan chiziq — chetlarida o'yiq */}
+        <div className="fdc-tear" aria-hidden="true" />
+
+        <div className="fdc-ticket__bottom">
+          <div className="fdc-clock" role="timer" aria-live="off" aria-label={formatCountdown(timer.remainingMs)}>
+            <Tiles ms={timer.remainingMs} />
+            <small>{t('timer.left')}</small>
           </div>
+          <span className="fdc-bar" style={{ ['--p' as string]: `${timer.progress * 100}%` }} />
+          <p className="fdc-sub">{t('timer.subtitle', { minutes })}</p>
           <button
-            className="btn-primary fdt-cta"
+            className="btn-primary fdc-cta"
             onClick={() => {
               hapticSelection()
               onShop()
@@ -89,14 +78,14 @@ export function FreeDeliverySheet({ open, hasCart, onShop, onClose }: {
           >
             {hasCart ? t('timer.ctaCart') : t('timer.cta')} <ArrowIcon size={18} />
           </button>
-          <button className="fdt-later" onClick={onClose}>{t('timer.later')}</button>
+          <button className="fdc-later" onClick={onClose}>{t('timer.later')}</button>
         </div>
       </div>
     </div>
   )
 }
 
-/** Bosh sahifadagi ixcham banner — sanoq tugaguncha turadi. */
+/** Bosh sahifadagi kichik kupon — sanoq tugaguncha turadi. */
 export function FreeDeliveryBanner({ onShop }: { onShop: () => void }) {
   const { t } = useI18n()
   const timer = useDeliveryTimer()
@@ -107,20 +96,21 @@ export function FreeDeliveryBanner({ onShop }: { onShop: () => void }) {
   return (
     <section className="px-5 pt-4 sm:px-10">
       <button
-        className={'fdt-banner' + (urgent ? ' is-urgent' : '') + (leaving ? ' leaving' : '')}
+        className={'fdc-strip' + (urgent ? ' is-urgent' : '') + (leaving ? ' leaving' : '')}
         onClick={onShop}
         aria-label={`${t('timer.bannerTitle')} — ${formatCountdown(timer.remainingMs)}`}
       >
-        <span className="fdt-banner__icon"><TruckIcon size={22} strokeWidth={2.2} /></span>
-        <span className="fdt-banner__text">
-          <b>{t('timer.bannerTitle')}</b>
-          <span>{t('timer.bannerText')}</span>
+        <span className="fdc-strip__main">
+          <span className="fdc-strip__icon"><TruckIcon size={20} strokeWidth={2.2} /></span>
+          <span className="fdc-strip__text">
+            <b>{t('timer.bannerTitle')}</b>
+            <span>{t('timer.bannerText')}</span>
+          </span>
         </span>
-        <span className="fdt-banner__time">
-          <Clock size={14} strokeWidth={2.6} />
-          {formatCountdown(timer.remainingMs)}
+        <span className="fdc-strip__time">
+          <Tiles ms={timer.remainingMs} size="sm" />
         </span>
-        <span className="fdt-banner__bar" style={{ ['--p' as string]: `${timer.progress * 100}%` }} />
+        <span className="fdc-bar fdc-bar--strip" style={{ ['--p' as string]: `${timer.progress * 100}%` }} />
       </button>
     </section>
   )
@@ -136,15 +126,11 @@ export function FreeDeliveryChip({ line = false }: { line?: boolean }) {
 
   if (line) {
     return (
-      <div className={'fdt-cartline' + (urgent ? ' is-urgent' : '')}>
+      <div className={'fdc-cartline' + (urgent ? ' is-urgent' : '')}>
         <span><TruckIcon size={16} /> {t('timer.cartLine')}</span>
-        <b><Clock size={13} strokeWidth={2.6} /> {time}</b>
+        <b>{time}</b>
       </div>
     )
   }
-  return (
-    <span className={'fdt-chip' + (urgent ? ' is-urgent' : '')}>
-      <Clock size={12} strokeWidth={2.6} /> {time}
-    </span>
-  )
+  return <span className={'fdc-chip' + (urgent ? ' is-urgent' : '')}>{time}</span>
 }
