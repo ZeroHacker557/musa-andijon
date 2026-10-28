@@ -9,6 +9,8 @@ import hmac
 import json
 import logging
 import time
+from html import escape as _html_escape
+from urllib.parse import quote
 from datetime import datetime, timezone
 
 import aiohttp
@@ -61,11 +63,16 @@ class PaymentUpload(StatesGroup):
 
 def main_kb(admin: bool = False, lang: str = tr.DEFAULT):
     rows = [
-        # Oddiy tugma — bosilganda pastdagi menyu tugmasiga yo'naltiradi.
-        # Mini app faqat yozuv maydoni yonidagi "🥟 Katalog" orqali ochiladi.
+        # Oddiy matn tugmalari — javobida do'konni ochadigan inline tugma
+        # keladi (reply-tugmaga web_app biriktirilsa, ilova initData'siz
+        # ochiladi va mijoz tizimga kira olmaydi).
         [KeyboardButton(text=tr.button("catalog", lang))],
-        [KeyboardButton(text=tr.button("orders", lang))],
-        [KeyboardButton(text=tr.button("contact", lang)), KeyboardButton(text=tr.button("help", lang))]
+        [KeyboardButton(text=tr.button("orders", lang)), KeyboardButton(text=tr.button("promo", lang))],
+        [
+            KeyboardButton(text=tr.button("delivery", lang)),
+            KeyboardButton(text=tr.button("contact", lang)),
+            KeyboardButton(text=tr.button("language", lang)),
+        ],
     ]
     # Admin panel tugmasi FAQAT adminlarda: oddiy mijoz uni umuman
     # ko'rmaydi. Bosilganda panel shu yerning o'zida ochiladi.
@@ -869,7 +876,7 @@ async def send_welcome(message: Message, user, admin: bool, lang: str):
 
 # ─── Til tanlash ──────────────────────────────────────────────
 
-@dp.message(F.text.in_({"/til", "/lang", "/language"}))
+@dp.message(F.text.in_(tr.labels("language") | {"/til", "/lang", "/language"}))
 async def cmd_language(message: Message):
     """Tilni keyinroq ham almashtirish mumkin."""
     await message.answer(tr.t("lang_ask"), reply_markup=language_kb())
@@ -928,8 +935,94 @@ async def handle_open_catalog(message: Message):
     await message.answer(tr.t("catalog_title", lang), reply_markup=catalog_kb(lang))
 
 
-@dp.message(F.text.in_(tr.labels("contact")))
+# ─── Aksiyalar va yetkazish ───────────────────────────────────
+
+SET_CATEGORY = "Setlar"   # admin panel ham shu nomni ishlatadi (ProductsPage.tsx)
+
+
+def escape(text: str) -> str:
+    """HTML uchun faqat < > & — tirnoq va tutuq belgisi o'z holicha qoladi."""
+    return _html_escape(text, quote=False)
+PROMO_LIMIT = 6
+
+
+def _promo_line(product: dict, lang: str) -> str:
+    """«• Nomi — 25 000 so'm» (+ eski narx yoki chegirma belgisi)."""
+    name = (product.get("nameRu") if lang == "ru" else None) or product.get("name") or ""
+    price = int(product.get("price") or 0)
+    line = f"• {escape(str(name))} — <b>{db.format_price(price)}</b>"
+    old = int(product.get("oldPrice") or 0)
+    if old > price:
+        line += f" <s>{db.format_price(old)}</s>"
+    elif product.get("discount"):
+        line += f" ({escape(str(product['discount']))})"
+    return line
+
+
+@dp.message(F.text.in_(tr.labels("promo")))
+async def handle_promo(message: Message):
+    """Setlar va chegirmali mahsulotlar — sotuvdagilari, admin tartibida."""
+    lang = tr.normalize(db.get_user_language(message.from_user.id))
+    products = await asyncio.to_thread(db.get_products)
+    live = [
+        p for p in products
+        if p.get("active") is not False and p.get("stock") != 0 and int(p.get("price") or 0) > 0
+    ]
+    live.sort(key=lambda p: p.get("order", 10**9))
+    sets = [p for p in live if p.get("category") == SET_CATEGORY]
+    sale = [
+        p for p in live
+        if p.get("category") != SET_CATEGORY
+        and (p.get("discount") or int(p.get("oldPrice") or 0) > int(p.get("price") or 0))
+    ]
+
+    if not sets and not sale:
+        await message.answer(tr.t("promo_empty", lang), reply_markup=catalog_kb(lang))
+        return
+
+    parts = [tr.t("promo_title", lang)]
+    for title_key, items in (("promo_sets", sets), ("promo_sale", sale)):
+        if not items:
+            continue
+        block = [tr.t(title_key, lang)] + [_promo_line(p, lang) for p in items[:PROMO_LIMIT]]
+        if len(items) > PROMO_LIMIT:
+            block.append(tr.t("promo_more", lang, count=len(items) - PROMO_LIMIT))
+        parts.append("\n".join(block))
+
+    # Setlar bo'lsa — do'kon to'g'ridan-to'g'ri setlar bo'limida ochiladi
+    url = f"{MINI_APP_URL}?cat={quote(SET_CATEGORY)}" if sets else MINI_APP_URL
+    kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(
+        text=tr.t("promo_button", lang) if sets else tr.t("catalog_button", lang),
+        web_app=WebAppInfo(url=url),
+    )]])
+    await message.answer("\n\n".join(parts), reply_markup=kb)
+
+
+@dp.message(F.text.in_(tr.labels("delivery")))
+async def handle_delivery(message: Message):
+    """Yetkazish shartlari — admin panel sozlamalaridan (settings/delivery, contact)."""
+    lang = tr.normalize(db.get_user_language(message.from_user.id))
+    d = await asyncio.to_thread(db.get_delivery_settings)
+    c = await asyncio.to_thread(db.get_contact_settings)
+    fee = d["fee"]
+    await message.answer(
+        tr.t(
+            "delivery_info", lang,
+            city=escape(c["address"]),
+            hours=escape(c["workHours"]),
+            fee=db.format_price(fee) if fee > 0 else tr.t("delivery_free_fee", lang),
+            free=tr.t("delivery_free_from", lang, amount=db.format_price(d["freeFrom"]))
+            if fee > 0 and d["freeFrom"] > 0 else "",
+            minimum=tr.t("delivery_min", lang, amount=db.format_price(d["minOrder"]))
+            if d["minOrder"] > 0 else "",
+        ),
+        reply_markup=catalog_kb(lang),
+    )
+
+
+@dp.message(F.text.in_(tr.labels("contact") | {"/help"}))
 async def cmd_contact(message: Message):
+    """Aloqa ma'lumotlari va qisqa «qanday buyurtma beriladi» (eski «Yordam»)."""
     lang = tr.normalize(db.get_user_language(message.from_user.id))
     # Admin panel → Sozlamalar → «Biz bilan aloqa» (bo'sh bo'lsa config.py)
     c = db.get_contact_settings()
@@ -1189,12 +1282,6 @@ async def cmd_group(message: Message):
     )
 
 
-@dp.message(F.text.in_(tr.labels("help") | {"/help"}))
-async def cmd_help(message: Message):
-    lang = tr.normalize(db.get_user_language(message.from_user.id))
-    await message.answer(tr.t("help", lang))
-
-
 # ─── WebApp sendData (fallback) ───────────────────────────────
 
 @dp.message(F.web_app_data)
@@ -1404,7 +1491,7 @@ async def main():
 
     try:
         await bot.set_chat_menu_button(
-            menu_button=MenuButtonWebApp(text="🥟 Katalog", web_app=WebAppInfo(url=MINI_APP_URL))
+            menu_button=MenuButtonWebApp(text="🛍 Do'kon", web_app=WebAppInfo(url=MINI_APP_URL))
         )
     except Exception as e:
         logger.warning(f"Menu button: {e}")

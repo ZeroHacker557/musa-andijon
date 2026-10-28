@@ -907,10 +907,12 @@ def get_delivery_settings() -> dict:
             return {
                 "fee": max(int(data.get("fee") or 0), 0),
                 "freeFrom": max(int(data.get("freeFrom") or 0), 0),
+                # Eng kam buyurtma summasi (admin panel → Sozlamalar)
+                "minOrder": max(int(data.get("minOrder") or 0), 0),
             }
     except Exception as e:
         print(f"[ERR] get_delivery_settings: {e}")
-    return {"fee": 0, "freeFrom": 0}
+    return {"fee": 0, "freeFrom": 0, "minOrder": 0}
 
 
 # MUSA ning uchta asosiy yo'nalishi — mini app'da bosh sahifadagi yirik

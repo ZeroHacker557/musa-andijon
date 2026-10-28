@@ -23,11 +23,20 @@ def normalize(lang) -> str:
 # Handler ikkala tildagi yorliqni ham tanishi kerak: mijoz tilni
 # almashtirgandan keyin ham eski klaviatura tugmasi ishlayversin.
 BUTTONS = {
-    "catalog": {"uz": "🥟 Katalogni ochish", "ru": "🥟 Открыть каталог"},
+    "catalog": {"uz": "🛍 Do'konni ochish", "ru": "🛍 Открыть магазин"},
     "orders": {"uz": "📦 Buyurtmalarim", "ru": "📦 Мои заказы"},
-    "contact": {"uz": "📞 Biz bilan aloqa", "ru": "📞 Связаться с нами"},
-    "help": {"uz": "ℹ️ Yordam", "ru": "ℹ️ Помощь"},
+    "promo": {"uz": "🔥 Aksiyalar", "ru": "🔥 Акции"},
+    "delivery": {"uz": "🚚 Yetkazish", "ru": "🚚 Доставка"},
+    "contact": {"uz": "📞 Aloqa", "ru": "📞 Контакты"},
+    "language": {"uz": "🌐 Til", "ru": "🌐 Язык"},
     "phone": {"uz": "📱 Raqamni yuborish", "ru": "📱 Отправить номер"},
+}
+
+# Eski klaviatura yorliqlari — mijozda qolib ketgan eski tugmalar ham
+# ishlayversin. «Yordam» endi «Aloqa» javobining ichida.
+LEGACY = {
+    "catalog": {"🥟 Katalogni ochish", "🥟 Открыть каталог"},
+    "contact": {"📞 Biz bilan aloqa", "📞 Связаться с нами", "ℹ️ Yordam", "ℹ️ Помощь"},
 }
 
 
@@ -36,8 +45,8 @@ def button(key: str, lang: str = DEFAULT) -> str:
 
 
 def labels(key: str) -> set:
-    """Shu tugmaning hamma tildagi yorliqlari — `F.text.in_(...)` uchun."""
-    return set(BUTTONS[key].values())
+    """Shu tugmaning hamma tildagi (va eski) yorliqlari — `F.text.in_(...)` uchun."""
+    return set(BUTTONS[key].values()) | LEGACY.get(key, set())
 
 
 SEP = "━" * 22
@@ -59,17 +68,23 @@ TEXTS = {
     "welcome": {
         "uz": (
             "Assalomu alaykum, <b>{name}</b>! 👋\n\n"
-            "🥟 <b>MUSA rasmiy do'koniga xush kelibsiz!</b>\n"
-            "<i>Muzlatilgan mahsulotlar — yangi xomashyo, shok muzlatish.</i>\n\n"
-            "🍽 <b>Yarim tayyor mahsulotlar, muzqaymoq va siroklar.</b>\n\n"
-            "👇 <i>Buyurtmani boshlash uchun quyidagi tugmani bosing:</i>"
+            "❄️ <b>MUSA Andijon</b> — muzlatilgan mahsulotlar do'koni.\n"
+            "Yarim tayyor mahsulotlar, muzqaymoq va siroklarni "
+            "Andijon shahri bo'ylab eshigingizgacha muzdek yetkazamiz.\n\n"
+            "🛍 <b>Do'konni ochish</b> — mahsulot tanlash va buyurtma\n"
+            "🔥 <b>Aksiyalar</b> — setlar va chegirmalar\n"
+            "🚚 <b>Yetkazish</b> — narx va vaqt\n\n"
+            "👇 <i>Boshlash uchun pastdagi tugmani bosing.</i>"
         ),
         "ru": (
             "Здравствуйте, <b>{name}</b>! 👋\n\n"
-            "🥟 <b>Добро пожаловать в официальный магазин MUSA!</b>\n"
-            "<i>Замороженные продукты — свежее сырьё, шоковая заморозка.</i>\n\n"
-            "🍽 <b>Полуфабрикаты, мороженое и сиропы.</b>\n\n"
-            "👇 <i>Нажмите кнопку ниже, чтобы сделать заказ:</i>"
+            "❄️ <b>MUSA Андижан</b> — магазин замороженных продуктов.\n"
+            "Полуфабрикаты, мороженое и сырки — доставим холодными "
+            "прямо к двери по городу Андижан.\n\n"
+            "🛍 <b>Открыть магазин</b> — выбор товаров и заказ\n"
+            "🔥 <b>Акции</b> — наборы и скидки\n"
+            "🚚 <b>Доставка</b> — стоимость и время\n\n"
+            "👇 <i>Нажмите кнопку ниже, чтобы начать.</i>"
         ),
     },
     "ask_phone": {
@@ -110,19 +125,71 @@ TEXTS = {
     # ── Katalog ──
     "catalog_title": {
         "uz": (
-            "🥟 <b>MUSA KATALOGI</b>\n"
-            "━━━━━━━━━━━━━━━━━━━━━━\n\n"
-            "Yarim tayyor mahsulotlar, muzqaymoq va siroklar — hammasi bir joyda.\n\n"
-            "👇 <b>Katalogni ochish</b> tugmasini bosing — do'kon shu yerning o'zida ochiladi."
+            "🛍 <b>MUSA Andijon do'koni</b>\n\n"
+            "🥟 Yarim tayyor mahsulotlar\n"
+            "🍦 Muzqaymoqlar\n"
+            "🧀 Siroklar\n"
+            "🎁 Setlar — bir nechta mahsulot arzonroq narxda\n\n"
+            "👇 Do'kon shu yerning o'zida, bir bosishda ochiladi."
         ),
         "ru": (
-            "🥟 <b>КАТАЛОГ MUSA</b>\n"
-            "━━━━━━━━━━━━━━━━━━━━━━\n\n"
-            "Полуфабрикаты, мороженое и сиропы — всё в одном месте.\n\n"
-            "👇 Нажмите <b>«Открыть каталог»</b> — магазин откроется прямо здесь."
+            "🛍 <b>Магазин MUSA Андижан</b>\n\n"
+            "🥟 Полуфабрикаты\n"
+            "🍦 Мороженое\n"
+            "🧀 Сырки\n"
+            "🎁 Наборы — несколько товаров дешевле\n\n"
+            "👇 Магазин откроется прямо здесь, в одно касание."
         ),
     },
-    "catalog_button": {"uz": "🥟 Katalogni ochish", "ru": "🥟 Открыть каталог"},
+    "catalog_button": {"uz": "🛍 Do'konni ochish", "ru": "🛍 Открыть магазин"},
+
+    # ── Aksiyalar ──
+    "promo_title": {"uz": "🔥 <b>Aksiyalar</b>", "ru": "🔥 <b>Акции</b>"},
+    "promo_sets": {"uz": "🎁 <b>Setlar</b>", "ru": "🎁 <b>Наборы</b>"},
+    "promo_sale": {"uz": "🏷 <b>Chegirmalar</b>", "ru": "🏷 <b>Скидки</b>"},
+    "promo_more": {"uz": "<i>…va yana {count} ta — do'konda.</i>", "ru": "<i>…и ещё {count} — в магазине.</i>"},
+    "promo_empty": {
+        "uz": (
+            "🔥 <b>Aksiyalar</b>\n\n"
+            "Hozircha faol aksiya yo'q. Yangi setlar va chegirmalar chiqqanda shu yerda ko'rinadi."
+        ),
+        "ru": (
+            "🔥 <b>Акции</b>\n\n"
+            "Сейчас активных акций нет. Новые наборы и скидки появятся здесь."
+        ),
+    },
+    "promo_button": {"uz": "🎁 Setlarni ochish", "ru": "🎁 Открыть наборы"},
+
+    # ── Yetkazish ──
+    "delivery_info": {
+        "uz": (
+            "🚚 <b>Yetkazib berish</b>\n\n"
+            "📍 <b>Hudud:</b> {city}\n"
+            "⏰ <b>Ish vaqti:</b> {hours}\n"
+            "💵 <b>Narxi:</b> {fee}\n"
+            "{free}{minimum}\n"
+            "❄️ Mahsulotlar sovutgichli sumkada, muzdek holda yetkaziladi.\n"
+            "💳 To'lov: naqd yoki karta orqali."
+        ),
+        "ru": (
+            "🚚 <b>Доставка</b>\n\n"
+            "📍 <b>Зона:</b> {city}\n"
+            "⏰ <b>Время работы:</b> {hours}\n"
+            "💵 <b>Стоимость:</b> {fee}\n"
+            "{free}{minimum}\n"
+            "❄️ Продукты доставляем в термосумке — холодными.\n"
+            "💳 Оплата: наличными или картой."
+        ),
+    },
+    "delivery_free_fee": {"uz": "bepul", "ru": "бесплатно"},
+    "delivery_free_from": {
+        "uz": "🎁 <b>{amount}</b> dan ortiq buyurtmada — <b>bepul</b>\n",
+        "ru": "🎁 При заказе от <b>{amount}</b> — <b>бесплатно</b>\n",
+    },
+    "delivery_min": {
+        "uz": "🧾 <b>Eng kam buyurtma:</b> {amount}\n",
+        "ru": "🧾 <b>Минимальный заказ:</b> {amount}\n",
+    },
 
     # ── Buyurtmalar ──
     "orders_button": {"uz": "📦 Buyurtmalarimni ko'rish", "ru": "📦 Посмотреть мои заказы"},
@@ -170,44 +237,32 @@ TEXTS = {
     # ── Aloqa va yordam ──
     "contact": {
         "uz": (
-            "📞 <b>MUSA bilan bog'lanish:</b>\n\n"
-            "💬 <b>Mijozlar xizmati:</b> {telegram}\n"
-            "📞 <b>Telefon raqam:</b> {phone}\n"
+            "📞 <b>MUSA Andijon bilan aloqa</b>\n\n"
+            "📞 <b>Telefon:</b> {phone}\n"
+            "💬 <b>Telegram:</b> {telegram}\n"
             "✉️ <b>Email:</b> {email}\n"
             "📍 <b>Manzil:</b> {city}\n"
             "⏰ <b>Ish vaqti:</b> {hours}\n\n"
+            "❓ <b>Qanday buyurtma beriladi?</b>\n"
+            "1. «🛍 Do'konni ochish» — mahsulotlarni savatga qo'shing.\n"
+            "2. Manzil va to'lov usulini tanlab, buyurtmani tasdiqlang.\n"
+            "3. Karta orqali to'lasangiz — chekni shu botga yuboring.\n"
+            "4. Holatni «📦 Buyurtmalarim» dan kuzating.\n\n"
             "<i>Ulgurji xarid va hamkorlik bo'yicha ham shu raqamga murojaat qiling.</i>"
         ),
         "ru": (
-            "📞 <b>Связаться с MUSA:</b>\n\n"
-            "💬 <b>Служба поддержки:</b> {telegram}\n"
+            "📞 <b>Контакты MUSA Андижан</b>\n\n"
             "📞 <b>Телефон:</b> {phone}\n"
+            "💬 <b>Telegram:</b> {telegram}\n"
             "✉️ <b>Email:</b> {email}\n"
             "📍 <b>Адрес:</b> {city}\n"
             "⏰ <b>Время работы:</b> {hours}\n\n"
+            "❓ <b>Как сделать заказ?</b>\n"
+            "1. «🛍 Открыть магазин» — добавьте товары в корзину.\n"
+            "2. Выберите адрес и способ оплаты, подтвердите заказ.\n"
+            "3. При оплате картой отправьте чек этому боту.\n"
+            "4. Следите за статусом в «📦 Мои заказы».\n\n"
             "<i>По оптовым закупкам и сотрудничеству — по этому же номеру.</i>"
-        ),
-    },
-    "help": {
-        "uz": (
-            "ℹ️ <b>Botdan qanday foydalanish mumkin?</b>\n\n"
-            "1️⃣ Yozuv maydoni yonidagi <b>«🥟 Katalog»</b> tugmasini bosib, "
-            "MUSA mahsulotlari bilan tanishing.\n"
-            "2️⃣ O'zingizga yoqqan mahsulotlarni <b>Savatga</b> qo'shing.\n"
-            "3️⃣ Buyurtmani rasmiylashtirishda <b>Naqd</b> yoki <b>Karta</b> orqali to'lov usulini tanlang.\n"
-            "4️⃣ Agar karta orqali to'lov qilsangiz, to'lov chekini botga yuboring.\n"
-            "5️⃣ Buyurtmangiz holatini <b>Buyurtmalarim</b> bo'limidan kuzatib boring.\n\n"
-            "<i>Tilni almashtirish uchun /til buyrug'ini yuboring.</i>"
-        ),
-        "ru": (
-            "ℹ️ <b>Как пользоваться ботом?</b>\n\n"
-            "1️⃣ Нажмите кнопку <b>«🥟 Katalog»</b> рядом с полем ввода "
-            "и посмотрите продукцию MUSA.\n"
-            "2️⃣ Добавьте понравившиеся товары в <b>Корзину</b>.\n"
-            "3️⃣ При оформлении выберите оплату: <b>Наличные</b> или <b>Карта</b>.\n"
-            "4️⃣ При оплате картой отправьте чек боту.\n"
-            "5️⃣ Следите за статусом в разделе <b>Мои заказы</b>.\n\n"
-            "<i>Чтобы сменить язык, отправьте команду /til.</i>"
         ),
     },
 
